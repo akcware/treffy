@@ -1,0 +1,28 @@
+{
+  "name": "treffy",
+  "version": "0.1.0",
+  "description": "Treffy Video Konferans Uygulaması",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:desktop": "pnpm --filter desktop dev",
+    "dev:mobile": "pnpm --filter mobile start",
+    "dev:server": "pnpm --filter server dev",
+    "build:web": "pnpm --filter web build",
+    "build:desktop": "pnpm --filter desktop build",
+    "build:mobile": "pnpm --filter mobile build",
+    "build:server": "pnpm --filter server build"
+  },
+  "keywords": [
+    "video",
+    "conference",
+    "webrtc",
+    "p2p"
+  ],
+  "author": "",
+  "license": "MIT"
+}
