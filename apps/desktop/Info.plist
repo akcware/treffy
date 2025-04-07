@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSCameraUsageDescription</key>
+    <string>Bu uygulama, görüntülü görüşme yapabilmeniz için kameranıza erişim gerektirir.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Bu uygulama, sesli görüşme yapabilmeniz için mikrofonunuza erişim gerektirir.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Bu uygulama, fotoğraf paylaşabilmeniz için fotoğraf kitaplığınıza erişim gerektirir.</string>
+    <key>NSUserNotificationsUsageDescription</key>
+    <string>Bu uygulama, gelen aramaları ve mesajları bildirmek için bildirimler gönderecektir.</string>
+</dict>
+</plist>

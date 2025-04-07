@@ -48,7 +48,7 @@ export function toggleVideo(stream, enabled) {
 
 // Doğrudan WebRTC bağlantısı kur - Güvenilir STUN sunucuları
 export function createPeerConnection(config = {}) {
-  // Güvenilir Google STUN sunucuları
+  // Sadece STUN sunucuları kullan (TURN sunucuları çözümlenemiyor)
   const iceServers = config.iceServers || [
     { urls: "stun:stun.l.google.com:19302" },
     { urls: "stun:stun1.l.google.com:19302" },
@@ -70,6 +70,18 @@ export function createPeerConnection(config = {}) {
   // ICE bağlantı durumunu izle
   peerConnection.oniceconnectionstatechange = () => {
     console.log('ICE bağlantı durumu:', peerConnection.iceConnectionState);
+    
+    // ICE bağlantı durumu "failed" veya "disconnected" olduğunda yeniden bağlanma dene
+    if (peerConnection.iceConnectionState === 'failed' || 
+        peerConnection.iceConnectionState === 'disconnected') {
+      console.log('⚠️ ICE bağlantısı başarısız veya koptu, yeniden bağlanma deneniyor...');
+      // Bağlantı durumunu sıfırla ve yeniden aday toplamaya başla
+      try {
+        peerConnection.restartIce();
+      } catch (error) {
+        console.error('ICE yeniden başlatma hatası:', error);
+      }
+    }
   };
   
   // Bağlantı durumunu izle

@@ -481,60 +481,107 @@ function CallPage() {
         peerConnection.addTrack(track, stream);
       });
       
-      // Uzak track'leri işle 
-      peerConnection.ontrack = (event) => {
-        debug('Uzak track alındı, stream sayısı:', event.streams.length);
-        if (event.streams && event.streams.length > 0) {
-          debug('Stream ID:', event.streams[0].id);
-          debug('Track sayısı:', event.streams[0].getTracks().length);
-          debug('Track türleri:', event.streams[0].getTracks().map(t => t.kind).join(', '));
-          
-          // Stream'i yeni bir değişkene atayıp işle
-          const stream = event.streams[0];
-          
-          // Stream'i state ve ref'e kaydet
-          remoteStreamRef.current = stream;
-          
-          // ÇÖZÜM: setTimeout ile state güncelleme
-          setTimeout(() => {
-            debug('Remote stream state\'e ayarlanıyor:', stream.id);
-            setRemoteStream(stream);
-          }, 100);
-          
-          // Ayrıca UI yenilemeleri için connectionStatus'u update et
-          setConnectionStatus('connected');
-        } else {
-          debug('Uzak stream bulunamadı');
-        }
-      };
-      
-      // ICE adaylarını dinle
-      peerConnection.onicecandidate = (event) => {
-        if (event.candidate) {
-          debug('ICE adayı oluşturuldu');
-          sendToPeer({
-            type: 'ice-candidate',
-            payload: event.candidate
-          });
-        }
-      };
-      
-      // ICE bağlantı durumunu izle
-      peerConnection.oniceconnectionstatechange = () => {
-        debug('ICE bağlantı durumu değişti:', peerConnection.iceConnectionState);
+      // Bağlantı olay işleyicilerini ayarlayan yardımcı fonksiyon tanımı (erken tanımla)
+      const setupPeerConnectionListeners = (pc) => {
+        // Uzak track'leri işle 
+        pc.ontrack = (event) => {
+          debug('Uzak track alındı, stream sayısı:', event.streams.length);
+          if (event.streams && event.streams.length > 0) {
+            debug('Stream ID:', event.streams[0].id);
+            debug('Track sayısı:', event.streams[0].getTracks().length);
+            debug('Track türleri:', event.streams[0].getTracks().map(t => t.kind).join(', '));
+            
+            // Stream'i yeni bir değişkene atayıp işle
+            const stream = event.streams[0];
+            
+            // Stream'i state ve ref'e kaydet
+            remoteStreamRef.current = stream;
+            
+            // ÇÖZÜM: setTimeout ile state güncelleme
+            setTimeout(() => {
+              debug('Remote stream state\'e ayarlanıyor:', stream.id);
+              setRemoteStream(stream);
+            }, 100);
+            
+            // Ayrıca UI yenilemeleri için connectionStatus'u update et
+            setConnectionStatus('connected');
+          } else {
+            debug('Uzak stream bulunamadı');
+          }
+        };
         
-        if (peerConnection.iceConnectionState === 'connected' || 
-            peerConnection.iceConnectionState === 'completed') {
-          setConnectionStatus('connected');
-        } else if (peerConnection.iceConnectionState === 'failed' || 
-                   peerConnection.iceConnectionState === 'disconnected' ||
-                   peerConnection.iceConnectionState === 'closed') {
-          setConnectionStatus('disconnected');
-        }
+        // ICE adaylarını dinle
+        pc.onicecandidate = (event) => {
+          if (event.candidate) {
+            debug('ICE adayı oluşturuldu');
+            sendToPeer({
+              type: 'ice-candidate',
+              payload: event.candidate
+            });
+          }
+        };
+        
+        // ICE bağlantı durumunu izle
+        pc.oniceconnectionstatechange = () => {
+          debug('ICE bağlantı durumu değişti:', pc.iceConnectionState);
+          
+          if (pc.iceConnectionState === 'connected' || 
+              pc.iceConnectionState === 'completed') {
+            setConnectionStatus('connected');
+          } else if (pc.iceConnectionState === 'failed') {
+            debug('ICE bağlantısı başarısız oldu');
+            handleIceFailure(pc);
+          } else if (pc.iceConnectionState === 'disconnected' ||
+                    pc.iceConnectionState === 'closed') {
+            setConnectionStatus('disconnected');
+          }
+        };
       };
       
-      // Sinyal sunucusuna bağlan
-      const signalingClient = createSignalingClient('http://localhost:3001');
+      // Olay işleyicilerini ayarla
+      setupPeerConnectionListeners(peerConnection);
+      
+      // Bağlantı için otomatik yeniden bağlantı işleyicisi
+      const handleIceFailure = (pc) => {
+        debug('ICE bağlantısı başarısız oldu, yeniden deneniyor...');
+          
+        // Yeniden bağlantı dene
+        setTimeout(async () => {
+          try {
+            // Şimdiki bağlantıyı kapat
+            pc.close();
+            
+            // Yeni bağlantı oluştur
+            const newPeerConnection = createPeerConnection();
+            peerConnectionRef.current = newPeerConnection;
+            
+            // Yerel stream'i ekle
+            if (localStream) {
+              localStream.getTracks().forEach(track => {
+                newPeerConnection.addTrack(track, localStream);
+              });
+            }
+            
+            // Olay işleyicilerini tekrar ekle
+            setupPeerConnectionListeners(newPeerConnection);
+            
+            // Yeni teklif oluştur
+            const offer = await createOffer(newPeerConnection);
+            sendToPeer({
+              type: 'offer',
+              payload: offer
+            });
+            
+            debug('Bağlantı yeniden kuruldu ve teklif gönderildi');
+          } catch (error) {
+            debug('Bağlantı yeniden kurma hatası:', error.message);
+            setConnectionStatus('disconnected');
+          }
+        }, 1000);
+      };
+      
+      // Sinyal sunucusuna bağlan - HTTP kullanarak
+      const signalingClient = createSignalingClient('http://5.133.102.214:3001');
       signalingRef.current = signalingClient;
       
       // Aktif ICE durumlarını günlükle
@@ -638,6 +685,49 @@ function CallPage() {
     
     if (pc) {
       try {
+        // Şu anki durum kontrolü
+        if (pc.signalingState === 'have-local-offer') {
+          debug('Zaten yerel teklif var, teklif çakışması olabilir');
+          // Teklif çakışması - görüşme ID'leri karşılaştır, küçük olan kazanır
+          const localId = userId;
+          const remoteId = offer.from || '';
+          
+          if (localId < remoteId) {
+            debug('Yerel ID daha küçük, teklifimizde ısrar ediyoruz');
+            return; // Uzak teklifi yoksay
+          } else {
+            debug('Uzak ID daha küçük, tekliflerini kabul ediyoruz');
+            // Mevcut bağlantıyı kapat ve yenisini oluştur
+            pc.close();
+            const newPC = createPeerConnection();
+            peerConnectionRef.current = newPC;
+            
+            // Yerel stream'i ekle
+            if (localStream) {
+              localStream.getTracks().forEach(track => {
+                newPC.addTrack(track, localStream);
+              });
+            }
+            
+            // Dinleyicileri ayarla
+            setupPeerConnectionListeners(newPC);
+            
+            // Uzak tanımı ayarla
+            await setRemoteDescription(newPC, offer);
+            
+            // Cevap oluştur
+            const answer = await createAnswer(newPC);
+            
+            sendToPeer({
+              type: 'answer',
+              payload: answer
+            });
+            
+            return;
+          }
+        }
+        
+        // Normal işleme
         await setRemoteDescription(pc, offer);
         debug('Uzak teklif başarıyla ayarlandı');
         debug('Cevap oluşturuluyor');
@@ -650,6 +740,39 @@ function CallPage() {
         });
       } catch (error) {
         debug('Teklif işleme hatası:', error.message);
+        
+        // Sinyal durumu hatası varsa, bağlantıyı sıfırla
+        if (error.message.includes('INVALID_STATE') || 
+            error.message.includes('wrong state')) {
+          
+          debug('Sinyal durumu hatası, bağlantı sıfırlanıyor...');
+          
+          // Mevcut bağlantıyı kapat
+          pc.close();
+          
+          // Yeni bağlantı oluştur
+          const newPC = createPeerConnection();
+          peerConnectionRef.current = newPC;
+          
+          // Yerel stream'i ekle
+          if (localStream) {
+            localStream.getTracks().forEach(track => {
+              newPC.addTrack(track, localStream);
+            });
+          }
+          
+          // Dinleyicileri ayarla
+          setupPeerConnectionListeners(newPC);
+          
+          // Teklifle devam et
+          await setRemoteDescription(newPC, offer);
+          const answer = await createAnswer(newPC);
+          
+          sendToPeer({
+            type: 'answer',
+            payload: answer
+          });
+        }
       }
     }
   };
@@ -661,10 +784,58 @@ function CallPage() {
     
     if (pc) {
       try {
+        // Durumu kontrol et
+        if (pc.signalingState !== 'have-local-offer') {
+          debug('Beklenmeyen durum, yerel teklif olmadan cevap alındı. Durum:', pc.signalingState);
+          return;
+        }
+        
         await setRemoteDescription(pc, answer);
         debug('Uzak tanımlama başarıyla ayarlandı');
       } catch (error) {
         debug('Uzak tanımlama ayarlama hatası:', error.message);
+        
+        // Sinyal durumu hatası çözümü
+        if (error.message.includes('INVALID_STATE') || 
+            error.message.includes('wrong state')) {
+          
+          debug('Sinyal durumu hatası, yeni görüşme başlatılacak...');
+          
+          // Bağlantıyı temizle
+          setTimeout(async () => {
+            try {
+              // Tüm bağlantıları kapat
+              if (pc.signalingState !== 'closed') {
+                pc.close();
+              }
+              
+              // Yeni bağlantı oluştur
+              const newPC = createPeerConnection();
+              peerConnectionRef.current = newPC;
+              
+              // Yerel stream'i ekle
+              if (localStream) {
+                localStream.getTracks().forEach(track => {
+                  newPC.addTrack(track, localStream);
+                });
+              }
+              
+              // Dinleyicileri ayarla
+              setupPeerConnectionListeners(newPC);
+              
+              // Yeni teklif gönder
+              const offer = await createOffer(newPC);
+              sendToPeer({
+                type: 'offer',
+                payload: offer
+              });
+              
+              debug('Yeni bağlantı kuruldu ve teklif gönderildi');
+            } catch (retryError) {
+              debug('Bağlantı yenileme hatası:', retryError.message);
+            }
+          }, 1000);
+        }
       }
     }
   };

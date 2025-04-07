@@ -33,7 +33,7 @@ function createWindow() {
     show: false, // Yükleme tamamlandıktan sonra göster
     frame: true,
     titleBarStyle: platform() === 'darwin' ? 'hiddenInset' : 'default',
-    icon: path.join(__dirname, '../assets/icon.png'),
+    icon: path.join(__dirname, '../assets/icon.ico'),
   });
 
   // İçeriği yükle

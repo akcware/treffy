@@ -1,23 +1,23 @@
 export const colors = {
   primary: {
-    main: '#4f46e5',
-    dark: '#4338ca',
-    light: '#818cf8'
+    main: '#000000',
+    dark: '#111111',
+    light: '#555555'
   },
   danger: {
-    main: '#ef4444',
-    dark: '#b91c1c',
-    light: '#fca5a5'
+    main: '#555555',
+    dark: '#333333',
+    light: '#888888'
   },
   success: {
-    main: '#10b981',
-    dark: '#047857',
-    light: '#6ee7b7'
+    main: '#222222',
+    dark: '#111111',
+    light: '#444444'
   },
   warning: {
-    main: '#f59e0b',
-    dark: '#b45309',
-    light: '#fcd34d'
+    main: '#444444',
+    dark: '#222222',
+    light: '#666666'
   },
   gray: {
     50: '#f8fafc',
@@ -97,10 +97,9 @@ export const buttonStyle = (variant = 'primary', disabled = false) => {
 };
 
 export const cardStyle = {
-  backgroundColor: 'white',
   borderRadius: '12px',
-  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
   padding: '20px',
+  border: '1px solid rgba(255, 255, 255, 0.2)',
 };
 
 export const badgeStyle = (variant = 'primary') => {

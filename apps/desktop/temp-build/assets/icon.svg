@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Rounded square background -->
+  <rect x="0" y="0" width="200" height="200" rx="40" ry="40" fill="#000000" />
+  
+  <!-- T letter shape -->
+  <path d="M55 70 L145 70 L145 100 L115 100 L115 145 L85 145 L85 100 L55 100 Z" fill="#FFFFFF" />
+  
+  <!-- Dot to the right -->
+  <circle cx="155" cy="145" r="10" fill="#FFFFFF" />
+</svg>

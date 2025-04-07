@@ -1,5 +1,4 @@
 const { app, BrowserWindow, desktopCapturer, ipcMain, nativeImage } = require('electron');
-const { autoUpdater } = require('electron-updater');
 // MediaStream nesnelerini pencereler arasında paylaşabilmek için global değişken
 global.sharedObjects = {
   // Ekran paylaşımı için streamler burada saklanacak
@@ -442,93 +441,8 @@ function createWindow() {
   }
 }
 
-// Otomatik güncelleyici yapılandırması
-function setupAutoUpdater() {
-  // macOS otomatik güncellemeleri
-  autoUpdater.autoDownload = true;
-  autoUpdater.autoInstallOnAppQuit = true;
-  
-  // Güncellemeler için URL belirle - GitHub yapılandırmasını otomatik algılar
-  autoUpdater.setFeedURL({
-    provider: 'github',
-    owner: 'yourusername', // GitHub kullanıcı adınızla değiştirin
-    repo: 'treffy', // GitHub repo adınızla değiştirin
-    releaseType: 'release'
-  });
-  
-  // Hata olayı
-  autoUpdater.on('error', (error) => {
-    console.error('Otomatik güncelleme hatası:', error);
-    // Ana pencereye hata bildirimi gönder
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('update-error', error.message);
-    }
-  });
-  
-  // Güncelleme kontrol ediliyor
-  autoUpdater.on('checking-for-update', () => {
-    console.log('Güncellemeler kontrol ediliyor...');
-  });
-  
-  // Güncelleme mevcut değil
-  autoUpdater.on('update-not-available', () => {
-    console.log('Güncelleme mevcut değil.');
-    // Ana pencereye güncelleme yok bildirimi gönder
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('update-not-available');
-    }
-  });
-  
-  // Güncelleme mevcut
-  autoUpdater.on('update-available', (info) => {
-    console.log('Yeni güncelleme mevcut:', info);
-    // Ana pencereye güncelleme mevcut bildirimi gönder
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('update-available', info);
-    }
-  });
-  
-  // Güncelleme indirildi
-  autoUpdater.on('update-downloaded', (info) => {
-    console.log('Güncelleme indirildi:', info);
-    // Kullanıcıya bildirilerek uygulama güncellenebilir
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('update-downloaded', info);
-      
-      // Opsiyonel: Otomatik olarak uygula ve yeniden başlat
-      // autoUpdater.quitAndInstall();
-    }
-  });
-  
-  // Güncelleme indirme ilerlemesi
-  autoUpdater.on('download-progress', (progressObj) => {
-    console.log(`İndirme hızı: ${progressObj.bytesPerSecond} - İndirilen: ${progressObj.percent}%`);
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('download-progress', progressObj);
-    }
-  });
-  
-  // IPC olaylarını dinle
-  ipcMain.on('check-for-updates', () => {
-    autoUpdater.checkForUpdates();
-  });
-  
-  // Güncellemeyi yükle ve yeniden başlat
-  ipcMain.on('install-update', () => {
-    autoUpdater.quitAndInstall();
-  });
-  
-  // Başlangıçta güncellemeleri kontrol et
-  setTimeout(() => {
-    autoUpdater.checkForUpdates();
-  }, 5000); // 5 saniye sonra kontrol et
-}
-
 app.whenReady().then(() => {
   createWindow();
-  
-  // Otomatik güncelleyiciyi kur
-  setupAutoUpdater();
   
   // MacOS için dock ikonu tekrar ayarla (bazı sistemlerde uygulama hazır olduğunda daha güvenli)
   if (process.platform === 'darwin') {

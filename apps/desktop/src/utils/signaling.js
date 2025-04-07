@@ -48,7 +48,9 @@ export function createSignalingClient(url) {
           transports: ['websocket', 'polling'],
           reconnectionAttempts: 10,
           reconnectionDelay: 1000,
-          timeout: 10000,
+          timeout: 20000, // Zaman aşımı süresini arttır
+          pingTimeout: 60000, // Ping zaman aşımını arttır
+          pingInterval: 25000, // Ping aralığını belirt
           autoConnect: true,
           forceNew: true
         });

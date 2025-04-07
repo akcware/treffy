@@ -1,16 +1,62 @@
 {
-  "name": "desktop",
-  "version": "0.1.0",
+  "name": "treffy",
+  "productName": "Treffy",
+  "version": "0.0.1",
   "private": true,
   "main": "main.js",
+  "build": {
+    "appId": "com.treffy.desktop",
+    "productName": "Treffy",
+    "mac": {
+      "category": "public.app-category.video",
+      "icon": "src/assets/icon.png",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "icon": "src/assets/icon.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "linux": {
+      "icon": "src/assets/icon.png",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "akcware",
+        "repo": "treffy"
+      }
+    ]
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "start": "electron .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "makeicns": "cd src/assets && mkdir -p AppIcon.iconset && sips -z 16 16 icon.png --out AppIcon.iconset/icon_16x16.png && sips -z 32 32 icon.png --out AppIcon.iconset/icon_16x16@2x.png && sips -z 32 32 icon.png --out AppIcon.iconset/icon_32x32.png && sips -z 64 64 icon.png --out AppIcon.iconset/icon_32x32@2x.png && sips -z 128 128 icon.png --out AppIcon.iconset/icon_128x128.png && sips -z 256 256 icon.png --out AppIcon.iconset/icon_128x128@2x.png && sips -z 256 256 icon.png --out AppIcon.iconset/icon_256x256.png && sips -z 512 512 icon.png --out AppIcon.iconset/icon_256x256@2x.png && sips -z 512 512 icon.png --out AppIcon.iconset/icon_512x512.png && sips -z 1024 1024 icon.png --out AppIcon.iconset/icon_512x512@2x.png && iconutil -c icns AppIcon.iconset && mv AppIcon.icns ../assets/icon.icns && rm -R AppIcon.iconset",
+    "fix-deps": "pnpm install && mkdir -p dist",
+    "standalone-build": "pnpm run build && cp -R dist temp-build/ && cp main.js temp-build/ && cp -R src/assets temp-build/ && cp Info.plist temp-build/ && cp entitlements.plist temp-build/",
+    "package": "pnpm run standalone-build && cd temp-build && electron-packager . Treffy --platform=darwin,win32,linux --arch=x64 --out=../dist --icon=src/assets/icon",
+    "package:mac": "pnpm run standalone-build && cd temp-build && electron-packager . Treffy --platform=darwin --arch=x64 --out=../dist --extend-info=Info.plist --osx-sign.entitlements=entitlements.plist --icon=src/assets/icon.icns",
+    "package:win": "pnpm run standalone-build && cd temp-build && electron-packager . Treffy --platform=win32 --arch=x64 --out=../dist --icon=src/assets/icon.ico",
+    "package:linux": "pnpm run standalone-build && cd temp-build && electron-packager . Treffy --platform=linux --arch=x64 --out=../dist --icon=src/assets/icon.png",
+    "installer:mac": "electron-installer-dmg dist/Treffy-darwin-x64/Treffy.app Treffy --icon=src/assets/icon.icns --overwrite",
+    "installer:win": "electron-installer-windows --src dist/Treffy-win32-x64/ --dest dist/installers/",
+    "installer:linux": "electron-installer-debian --src dist/Treffy-linux-x64/ --dest dist/installers/ --arch amd64",
+    "publish": "electron-builder -p always",
+    "release": "pnpm run build && electron-builder --publish always"
   },
   "dependencies": {
-    "@treffy/ui": "workspace:*",
+    "electron-updater": "^6.6.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.30.0",
@@ -22,6 +68,12 @@
     "@types/react-dom": "^18.2.14",
     "@vitejs/plugin-react": "^4.1.0",
     "electron": "^27.0.2",
+    "electron-builder": "^26.0.12",
+    "electron-installer-debian": "^3.1.0",
+    "electron-installer-dmg": "^4.0.0",
+    "electron-installer-windows": "^3.0.0",
+    "electron-packager": "^17.1.2",
+    "loose-envify": "^1.4.0",
     "vite": "^4.5.0"
   }
 }

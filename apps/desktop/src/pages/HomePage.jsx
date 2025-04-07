@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { buttonStyle, colors, cardStyle } from '../styles';
+// @treffy/ui bağımlılığı kaldırıldı
+import { iconPath } from '../assets-import';
 
 function HomePage() {
   const navigate = useNavigate();
@@ -21,7 +23,7 @@ function HomePage() {
     <div style={{ 
       padding: '20px',
       height: '100vh',
-      backgroundColor: colors.gray[50],
+      background: 'transparent',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -34,10 +36,25 @@ function HomePage() {
         textAlign: 'center',
         marginBottom: '40px'
       }}>
-        <h1 style={{ fontSize: '32px', marginBottom: '24px' }}>Treffy</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+          <img 
+            src={iconPath} 
+            alt="Treffy Logo" 
+            style={{ height: '60px', marginRight: '15px' }} 
+            onError={(e) => { e.target.style.display = 'none' }}
+          />
+          <h1 style={{ 
+            fontSize: '42px', 
+            color: '#000',
+            letterSpacing: '-0.5px',
+            fontWeight: 'bold',
+            textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+          }}>Treffy</h1>
+        </div>
         <p style={{ 
           fontSize: '18px', 
-          color: colors.gray[600],
+          color: '#475569',
+          textShadow: '0 1px 2px rgba(0,0,0,0.1)',
           marginBottom: '40px' 
         }}>
           Yüksek performanslı video konferans uygulaması
@@ -47,7 +64,12 @@ function HomePage() {
           ...cardStyle,
           marginBottom: '20px',
           textAlign: 'center',
-          padding: '30px'
+          padding: '30px',
+          background: 'rgba(255, 255, 255, 0.4)',
+          backdropFilter: 'blur(15px)',
+          WebkitBackdropFilter: 'blur(15px)',
+          borderColor: 'rgba(255, 255, 255, 0.2)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.05)'
         }}>
           <h2 style={{ fontSize: '20px', marginBottom: '24px' }}>Yeni Görüşme</h2>
           <button
@@ -57,6 +79,9 @@ function HomePage() {
               width: '100%',
               padding: '12px 20px',
               fontSize: '16px',
+              borderRadius: '10px',
+              background: '#000000',
+              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)',
               '-webkit-app-region': 'no-drag' // Butonun sürüklenebilir olmasını engeller
             }}
           >
@@ -66,7 +91,12 @@ function HomePage() {
         
         <div style={{
           ...cardStyle,
-          textAlign: 'left'
+          textAlign: 'left',
+          background: 'rgba(255, 255, 255, 0.4)',
+          backdropFilter: 'blur(15px)',
+          WebkitBackdropFilter: 'blur(15px)',
+          borderColor: 'rgba(255, 255, 255, 0.2)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.05)'
         }}>
           <h2 style={{ 
             fontSize: '20px', 
@@ -97,11 +127,19 @@ function HomePage() {
               style={{
                 width: '100%',
                 padding: '12px 16px',
-                borderRadius: '8px',
+                borderRadius: '10px',
                 border: `1px solid ${colors.gray[300]}`,
+                background: 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
                 fontSize: '16px',
                 outline: 'none',
                 boxSizing: 'border-box',
+                transition: 'all 0.2s ease-in-out',
+                ':focus': {
+                  borderColor: '#000',
+                  boxShadow: '0 0 0 3px rgba(0, 0, 0, 0.15)'
+                },
                 '-webkit-app-region': 'no-drag' // Input alanının sürüklenebilir olmasını engeller
               }}
             />
@@ -115,6 +153,9 @@ function HomePage() {
               width: '100%',
               padding: '12px 20px',
               fontSize: '16px',
+              borderRadius: '10px',
+              background: !roomId.trim() ? undefined : '#000000',
+              boxShadow: !roomId.trim() ? undefined : '0 4px 14px rgba(0, 0, 0, 0.2)',
               '-webkit-app-region': 'no-drag' // Butonun sürüklenebilir olmasını engeller
             }}
           >
@@ -125,8 +166,9 @@ function HomePage() {
         <div style={{ 
           marginTop: '24px',
           fontSize: '14px',
-          color: colors.gray[500],
-          textAlign: 'center'
+          color: 'rgba(0, 0, 0, 0.6)',
+          textAlign: 'center',
+          textShadow: '0 1px 1px rgba(255, 255, 255, 0.2)'
         }}>
           <p>
             Treffy, yüksek kaliteli (1080p) video konferans uygulamasıdır.
